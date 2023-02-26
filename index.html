@@ -1,0 +1,230 @@
+<!-- ErgoCrop [ Hack Illinois "23 Submission] 
+Written By:
+[Adam Nimer, George Fashho, David Romero, Miguel Cortez]
+On:
+[Sun Feb 26th 2023]
+ -->
+<!DOCTYPE html>
+<html>
+
+<h1>
+  ErgoCrop
+</h1>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>ErgoCrop</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+
+  <head>
+    <style>
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      label {
+        display: inline-block;
+        width: 30%;
+        text-align: right;
+        margin-bottom: 10px;
+        padding-right: 10px;
+        font-weight: bold;
+      }
+
+      input[type="text"] {
+        width: 60%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        box-sizing: border-box;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .input-group label {
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+
+<body>
+  <form>
+    <div class="input-group">
+      <label for="latitude">Latitude:</label>
+      <input type="text" id="latitude">
+    </div>
+    <div class="input-group">
+      <label for="longitude">Longitude:</label>
+      <input type="text" id="longitude">
+    </div>
+    <div class="input-group">
+      <label for="Date">Date:</label>
+      <input type="text" id="Date" placeholder="       MM-DD">
+    </div>
+  </form>
+</body>
+
+
+
+<br>
+<style>
+  .dropdown-btn {
+    background-color: #9bc53d;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 24px;
+    cursor: pointer;
+    display: block;
+    width: 200px;
+    margin: 0 auto;
+    position: relative;
+    transition: background-color 0.3s ease;
+  }
+
+  .dropdown-content {
+    display: none;
+    width: 200px;
+    align-items: center;
+    padding: 10px 20px;
+
+
+  }
+
+  .show {
+    align-items: center;
+    display: inline;
+  }
+</style>
+
+<button class="dropdown-btn">Select a crop</button>
+<div class="dropdown-content">
+  <select id="crop">
+    <option value="corn">Corn</option>
+    <option value="wheat">Wheat</option>
+    <option value="soybeans">Soybeans</option>
+  </select>
+</div>
+
+<script>
+  const dropdownBtn = document.querySelector(".dropdown-btn");
+  const dropdownContent = document.querySelector(".dropdown-content");
+  dropdownBtn.addEventListener("click", function () {
+    dropdownContent.classList.toggle("show");
+  });
+</script>
+
+<br>
+
+
+<button onclick="search()">Search</button>
+
+<div class="container">
+  <div class="popup" id="popup">
+    <img src="green_check.jpg">
+    <h2>Go ahead and plant!</h2>
+    <p>Based on the soil moisture levels and temp levels, planting at this time would be a great idea!</p>
+    <button type="button" onclick="closePopup()">Okay</button>
+  </div>
+</div>
+
+<div class="container_no">
+  <div class="popup_no" id="popup_no">
+    <img src="red_circle_dash.jpg">
+    <h2>Maybe look for another spot.</h2>
+    <p>It seems that the moisture levels and temp levels are not ideal therefore you can potentially try planting a
+      different crop or wait for a different season.</p>
+    <button type="button_no" onclick="closePopup_no()">Okay</button>
+  </div>
+</div>
+
+
+<script>
+
+
+  let popup = document.getElementById("popup");
+  let popup_no = document.getElementById("popup_no");
+  let container = document.querySelector(".container");
+  let container_no = document.querySelector(".container_no");
+
+  function openPopup() {
+    popup.classList.add("open-popup");
+  }
+
+  function closePopup() {
+    popup.classList.remove("open-popup");
+  }
+
+  function openPopup_no() {
+    popup_no.classList.add("open-popup_no");
+  }
+
+  function closePopup_no() {
+    popup_no.classList.remove("open-popup_no");
+  }
+
+</script>
+
+<script>
+
+  const crops = new Map();
+  crops.set('corn', '.25-.45');
+  crops.set('wheat', '.30-.50');
+  crops.set('soybeans', '.30-.50');
+
+  console.log(crops.get('corn'));
+
+  function search() {
+    var userCrop = document.getElementById("crop").value;
+    console.log(userCrop);
+    const latitude = document.getElementById('latitude').value;
+    const longitude = document.getElementById('longitude').value;
+    const date = "2022-" + document.getElementById('Date').value;
+    const params = 'soilTemperature,soilMoisture';
+
+    const apiUrl = `https://api.stormglass.io/v2/bio/point?lat=${latitude}&lng=${longitude}&params=${params}&start=${date}&end=${date}`;
+
+    fetch(apiUrl, {
+      headers: {
+        'Authorization': 'bf9ed244-b5b8-11ed-a654-0242ac130002-bf9ed30c-b5b8-11ed-a654-0242ac130002'
+      }
+    }).then((response) => response.json())
+      .then((jsonData) => {
+        const soilMoistureData = jsonData.hours[0].soilMoisture.noaa;
+        let chosenCrop = userCrop;
+        let chosenCropVal = crops.get(chosenCrop);
+        let valRange = chosenCropVal.split('-').map(parseFloat);
+        let shouldCrop = false;
+
+
+        let midpoint = (valRange[0] + valRange[1]) / 2
+        const percentage = 100 - (Math.abs(midpoint - soilMoistureData) * 100 / midpoint);
+        let p = document.createElement("p");
+
+        if (percentage > 60.0) {
+          openPopup_no();
+]
+        }
+        else {
+          openPopup();
+
+        }
+
+
+        document.body.append(p);
+        console.log(jsonData);
+      });
+  }
+</script>
+</body>
+
+</html>
